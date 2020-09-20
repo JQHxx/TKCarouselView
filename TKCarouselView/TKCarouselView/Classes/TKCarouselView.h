@@ -25,14 +25,30 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 @property (nonatomic,assign) DotAlignmentType dotAlignmentType;
 @end
 
+@class TKCarouselView;
+@protocol TKCarouselViewDelegate <NSObject>
+
+/** 点击图片回调 */
+- (void)cycleScrollView:(TKCarouselView *)cycleScrollView didSelectItemAtIndex:(NSInteger)index;
+
+/** 图片滚动回调 */
+- (void)cycleScrollView:(TKCarouselView *)cycleScrollView didScrollToIndex:(NSInteger)index;
+
+@end
+
 @interface TKCarouselView : UIView
+
+@property (nonatomic, weak) id<TKCarouselViewDelegate> delegate;
 
 //MARK:- CarouselView parameter setting
 
 // Whether to turn on automatic rotoasting (the default is to turn on, it must be imageCount>1, otherwise rotoasting is meaningless)
-@property (nonatomic,assign) BOOL isAutoScroll;
+@property (nonatomic,assign) BOOL autoScroll;
+
+@property (nonatomic,assign) BOOL infiniteLoop;
 //Rotation interval (3 seconds by default)）
-@property (nonatomic,assign) NSTimeInterval intervalTime;
+@property (nonatomic,assign) NSTimeInterval autoScrollTimeInterval;
+
 // It takes effect when imageCount==0
 @property (nonatomic,strong) UIImageView *placeholderImageView;
 
@@ -42,7 +58,8 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 // Whether pagecontrol is hidden or not
 @property (nonatomic,assign) BOOL isHiddenPageControl;
 
-@property (nonatomic,assign) BOOL isNeedReloadItemDidScrollOperation;
+@property (nonatomic,assign) BOOL isNeedReloadFirstDidScrollCallBack;
+
 // scroll current index
 @property (nonatomic, copy) void (^itemDidScrollOperationBlock)(NSInteger currentIndex);
 
