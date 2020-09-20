@@ -39,9 +39,20 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 //MARK:- UIPageControl Related Settings (do not set the default to dots)
 @property (nonatomic,strong) TKPageControl *pageControl;
 
+// Whether pagecontrol is hidden or not
+@property (nonatomic,assign) BOOL isHiddenPageControl;
+
+@property (nonatomic,assign) BOOL isNeedReloadItemDidScrollOperation;
+// scroll current index
+@property (nonatomic, copy) void (^itemDidScrollOperationBlock)(NSInteger currentIndex);
+
 /// reload (Must be implemented)
 /// @param imageCount imageCount (0-100)
 /// @param itemAtIndexBlock A view displayed on the screen
 /// @param imageClickedBlock The view is clicked
 - (void)reloadImageCount:(NSUInteger)imageCount itemAtIndexBlock:(TKItemAtIndexBlock)itemAtIndexBlock imageClickedBlock:(void(^)(NSInteger index))imageClickedBlock;
+
+- (void)pageControlHidden:(BOOL)isHidden;
+- (void)makeScrollViewScrollToIndex:(NSInteger)index;
+
 @end

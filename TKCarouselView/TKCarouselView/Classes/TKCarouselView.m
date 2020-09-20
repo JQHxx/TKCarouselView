@@ -112,6 +112,7 @@ static const int imageViewCount = 3;
     _isAutoScroll = YES;
     _imageCount = 0;
     _currentPageIndex = 0;
+    _isNeedReloadItemDidScrollOperation = YES;
 
     for (int i = 0;i < imageViewCount; i++) {
         UIImageView *imageView = [[UIImageView alloc] init];
@@ -140,7 +141,22 @@ static const int imageViewCount = 3;
 
     [self setContent];
     [self startTimer];
+    if (self.itemDidScrollOperationBlock && self.isNeedReloadItemDidScrollOperation) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
 
+}
+
+- (void)makeScrollViewScrollToIndex:(NSInteger)index {
+    if (index >= _pageControl.numberOfPages) { 
+        return;
+    }
+    [self startTimer];
+    _pageControl.currentPage = index;
+    [self setContent];
+    if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
+}
+
+- (void)pageControlHidden:(BOOL)isHidden {
+    self.pageControl.hidden = isHidden;
 }
 
 - (void)layoutSubviews {
@@ -218,10 +234,12 @@ static const int imageViewCount = 3;
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     [self updateDisplayContent];
+    if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
     [self updateDisplayContent];
+    if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
 }
 
 //MARK:- The timer
