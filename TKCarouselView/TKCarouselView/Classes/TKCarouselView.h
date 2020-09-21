@@ -45,7 +45,6 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 // Whether to turn on automatic rotoasting (the default is to turn on, it must be imageCount>1, otherwise rotoasting is meaningless)
 @property (nonatomic,assign) BOOL autoScroll;
 
-@property (nonatomic,assign) BOOL infiniteLoop;
 //Rotation interval (3 seconds by default)）
 @property (nonatomic,assign) NSTimeInterval autoScrollTimeInterval;
 

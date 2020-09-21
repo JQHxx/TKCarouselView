@@ -85,7 +85,6 @@ static const int imageViewCount = 3;
 @property (nonatomic, copy  ) TKItemAtIndexBlock itemAtIndexBlock;
 @property (nonatomic, copy  ) void(^imageClickedBlock) (NSInteger index);
 @property (nonatomic, assign) NSInteger currentPageIndex;//The subscript of the current screen
-@property (nonatomic, assign) BOOL isMakeScrollViewScrollToIndex;
 
 @end
 
@@ -115,7 +114,6 @@ static const int imageViewCount = 3;
     _imageCount = 0;
     _currentPageIndex = 0;
     _isNeedReloadFirstDidScrollCallBack = YES;
-    _infiniteLoop = YES;
 
     for (int i = 0;i < imageViewCount; i++) {
         UIImageView *imageView = [[UIImageView alloc] init];
@@ -155,7 +153,6 @@ static const int imageViewCount = 3;
     if (index >= _pageControl.numberOfPages) {
         return;
     }
-    _isMakeScrollViewScrollToIndex = YES;
     [self startTimer];
     _pageControl.currentPage = index;
     [self updateDisplayContent];
@@ -217,7 +214,6 @@ static const int imageViewCount = 3;
 //MARK:- UIScrollViewDelegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-
     NSInteger page = 0;
     //To get the minimum offset
     CGFloat minDistance = MAXFLOAT;
@@ -233,7 +229,6 @@ static const int imageViewCount = 3;
     }
     _pageControl.currentPage = page;
     self.currentPageIndex = page;
-
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
@@ -245,25 +240,6 @@ static const int imageViewCount = 3;
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-
-    if (!_infiniteLoop && !_autoScroll) {
-        if(self.currentPageIndex == 0) {
-            if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
-            if (_delegate && [_delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
-                [_delegate cycleScrollView:self didScrollToIndex:self.pageControl.currentPage];
-            }
-            return;
-        }
-
-        if(self.currentPageIndex == self.pageControl.numberOfPages - 1) {
-            if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
-            if (_delegate && [_delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
-                [_delegate cycleScrollView:self didScrollToIndex:self.pageControl.currentPage];
-            }
-            return;
-        }
-    }
-
     [self updateDisplayContent];
     if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
     if (_delegate && [_delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
@@ -272,7 +248,6 @@ static const int imageViewCount = 3;
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
-
     [self updateDisplayContent];
     if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
     if (_delegate && [_delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
