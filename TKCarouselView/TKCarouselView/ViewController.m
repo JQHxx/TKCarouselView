@@ -101,7 +101,9 @@
     [carouselView addSubview:label];
 }
 
+int i = 0;
 - (void)testTKCarouselView {
+    
     NSArray *array = @[
         @"https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3658587479,3162190896&fm=26&gp=0.jpg",
         @"https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1322896087,2736086242&fm=26&gp=0.jpg",
@@ -109,9 +111,10 @@
         @"https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=2776433555,1185570728&fm=26&gp=0.jpg",
     ];
 
-   TKCarouselView * carouselView = [[TKCarouselView alloc] initWithFrame:CGRectMake(16, self.view.bounds.size.width + 60, self.view.bounds.size.width-32, self.view.bounds.size.width/2)];
+   TKCarouselView * carouselView = [[TKCarouselView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.width/2)];
+    __weak typeof(carouselView) weakCarouselView = carouselView;
     carouselView.autoScroll = NO;
-    carouselView.autoScrollTimeInterval = 3;
+    carouselView.autoScrollTimeInterval = 3.0;
     carouselView.placeholderImageView.image = [UIImage imageNamed:@"placeholderImage.jpg"];
     [self.view addSubview:carouselView];
 
@@ -135,6 +138,12 @@
 
     } imageClickedBlock:^(NSInteger index) {
         NSLog(@"click %@",@(index));
+        i++;
+        if (i % 2 != 0) {
+            weakCarouselView.frame = CGRectMake(0, self.view.bounds.size.width/2 - 100, 180, 100);
+        } else {
+            weakCarouselView.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.width/2);
+        }
 
     }];
 

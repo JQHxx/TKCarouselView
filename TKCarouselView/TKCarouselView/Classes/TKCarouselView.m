@@ -31,6 +31,11 @@
 
 static const int imageViewCount = 3;
 
+@interface TKPageControl ()
+
+
+@end
+
 @implementation TKPageControl
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -46,6 +51,8 @@ static const int imageViewCount = 3;
         self.otherDotSize = CGSizeMake(7.0, 7.0);
         self.otherDotRadius = 3.5;
         self.dotAlignmentType = DotAlignmentTypeCenter;
+        self.currentDotColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:1.0];
+        self.otherDotColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:0.3];
     }
     return self;
 }
@@ -54,31 +61,49 @@ static const int imageViewCount = 3;
 {
     [super layoutSubviews];
 
-    CGFloat marginX = (_otherDotSize.width + _dotSpacing)*(self.numberOfPages-1)+_currentDotSize.width;
-    if (self.dotAlignmentType == DotAlignmentTypeCenter) {
-        marginX = (self.bounds.size.width - marginX)/2;
-    }else if (self.dotAlignmentType == DotAlignmentTypeLeft){
-        marginX = 0;
-    }else if (self.dotAlignmentType == DotAlignmentTypeRight) {
-        marginX = self.bounds.size.width - marginX;
-    }
-    for (NSUInteger subviewIndex = 0; subviewIndex < self.subviews.count; subviewIndex++) {
-        UIView *subview = [self.subviews objectAtIndex:subviewIndex];
-        if (subviewIndex == self.currentPage) {
-            [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _currentDotSize.width, _currentDotSize.height)];
-            subview.layer.cornerRadius  = _currentDotRadius;
-            marginX = _currentDotSize.width + _dotSpacing + marginX;
-        }else{
-            [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _otherDotSize.width, _otherDotSize.height)];
-            subview.layer.cornerRadius  = _otherDotRadius;
-            marginX = _otherDotSize.width + _dotSpacing +marginX;
-        }
-    }
+//    CGFloat marginX = (_otherDotSize.width + _dotSpacing)*(self.numberOfPages-1)+_currentDotSize.width;
+//    if (self.dotAlignmentType == DotAlignmentTypeCenter) {
+//        marginX = (self.bounds.size.width - marginX)/2.0;
+//    }else if (self.dotAlignmentType == DotAlignmentTypeLeft){
+//        marginX = 0;
+//    }else if (self.dotAlignmentType == DotAlignmentTypeRight) {
+//        marginX = self.bounds.size.width - marginX;
+//    }
+//    for (NSUInteger subviewIndex = 0; subviewIndex < self.subviews.count; subviewIndex++) {
+//        UIView *subview = [self.subviews objectAtIndex:subviewIndex];
+//        if (![subview isKindOfClass:[UIImageView class]]) {
+//            continue;
+//        }
+//        if (subviewIndex == self.currentPage) {
+//            [subview setFrame:CGRectMake(marginX, (self.bounds.size.height - _currentDotSize.height) / 2.0 , _currentDotSize.width, _currentDotSize.height)];
+//            subview.layer.cornerRadius  = _currentDotRadius;
+//            subview.backgroundColor = self.currentDotColor;
+//            marginX = marginX + _currentDotSize.width + _dotSpacing;
+//        } else {
+//            [subview setFrame:CGRectMake(marginX, (self.bounds.size.height - _otherDotSize.height) / 2.0, _otherDotSize.width, _otherDotSize.height)];
+//            subview.layer.cornerRadius  = _otherDotRadius;
+//            subview.backgroundColor = self.otherDotColor;
+//            marginX = marginX + _otherDotSize.width + _dotSpacing;
+//        }
+//    }
+}
+
+#pragma mark - Setter
+- (void)setNumberOfPages:(NSInteger)numberOfPages {
+    [super setNumberOfPages:numberOfPages];
+}
+
+- (void)setCurrentPage:(NSInteger)currentPage {
+    [super setCurrentPage:currentPage];
+
 }
 
 @end
 
 @interface TKCarouselView() <UIScrollViewDelegate>
+{
+    NSInteger _firstStartIndex;
+}
 @property (nonatomic, strong) UIScrollView*scrollView;
 @property (nonatomic, assign) NSUInteger imageCount;
 @property (nonatomic, weak  ) NSTimer *timer;
@@ -89,15 +114,6 @@ static const int imageViewCount = 3;
 @end
 
 @implementation TKCarouselView
-
-- (instancetype)init
-{
-    self = [super init];
-    if (self) {
-        [self configureDefaultParameters];
-    }
-    return self;
-}
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
@@ -117,6 +133,7 @@ static const int imageViewCount = 3;
 
     for (int i = 0;i < imageViewCount; i++) {
         UIImageView *imageView = [[UIImageView alloc] init];
+        //imageView.contentMode = UIViewContentModeScaleAspectFit;
         imageView.userInteractionEnabled = YES;
         [self.scrollView addSubview:imageView];
     }
@@ -138,7 +155,7 @@ static const int imageViewCount = 3;
 
     self.pageControl.hidden = imageCount>1 ? NO : YES;
     self.pageControl.numberOfPages = imageCount;
-    self.pageControl.currentPage = 0;
+    self.pageControl.currentPage = _firstStartIndex;
 
     [self setContent];
     [self startTimer];
@@ -153,9 +170,10 @@ static const int imageViewCount = 3;
     if (index >= _pageControl.numberOfPages) {
         return;
     }
-    [self startTimer];
+    _firstStartIndex = index;
     _pageControl.currentPage = index;
-    [self updateDisplayContent];
+    [self setContent];
+    [self startTimer];
     if (self.itemDidScrollOperationBlock) self.itemDidScrollOperationBlock(index);
     if (_delegate && [_delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
         [_delegate cycleScrollView:self didScrollToIndex:index];
@@ -181,6 +199,8 @@ static const int imageViewCount = 3;
 
     //Show the middle image
     self.scrollView.contentOffset = CGPointMake(width, 0);
+    
+    self.pageControl.frame = CGRectMake(0, self.bounds.size.height - 20, self.bounds.size.width, 20);
 }
 
 
@@ -314,7 +334,7 @@ static const int imageViewCount = 3;
 
 - (TKPageControl *)pageControl {
     if (!_pageControl) {
-        _pageControl = [[TKPageControl alloc] initWithFrame:CGRectMake(0, self.bounds.size.height - 20, self.frame.size.width, 20)];
+        _pageControl = [[TKPageControl alloc] initWithFrame:CGRectMake(0, self.bounds.size.height - 20, self.bounds.size.width, 20)];
         [self addSubview:_pageControl];
     }
     return _pageControl;

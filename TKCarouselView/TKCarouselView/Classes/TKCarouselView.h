@@ -17,12 +17,16 @@ typedef NS_ENUM(NSInteger, DotAlignmentType) {
 typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 
 @interface TKPageControl : UIPageControl
+
+@property (nonatomic,strong) UIColor *currentDotColor;
+@property (nonatomic,strong) UIColor *otherDotColor;
 @property (nonatomic,assign) CGSize currentDotSize;//Current page dot size
 @property (nonatomic,assign) CGSize otherDotSize;//Except for the size of the dots on the current page
 @property (nonatomic,assign) CGFloat currentDotRadius;//The default is 0
 @property (nonatomic,assign) CGFloat otherDotRadius;//The default is 0
 @property (nonatomic,assign) CGFloat dotSpacing;//Spacing
 @property (nonatomic,assign) DotAlignmentType dotAlignmentType;
+
 @end
 
 @class TKCarouselView;
