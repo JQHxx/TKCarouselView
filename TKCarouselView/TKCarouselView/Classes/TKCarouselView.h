@@ -46,6 +46,9 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 
 //MARK:- CarouselView parameter setting
 
+/// Infinite shuffling (default is YES , the timer is off)
+@property (nonatomic,assign) BOOL isInfiniteShuffling;
+
 // Whether to turn on automatic rotoasting (the default is to turn on, it must be imageCount>1, otherwise rotoasting is meaningless)
 @property (nonatomic,assign) BOOL autoScroll;
 

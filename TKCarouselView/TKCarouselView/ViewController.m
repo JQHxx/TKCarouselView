@@ -114,6 +114,7 @@ int i = 0;
    TKCarouselView * carouselView = [[TKCarouselView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.width/2)];
     __weak typeof(carouselView) weakCarouselView = carouselView;
     carouselView.autoScroll = NO;
+    carouselView.isInfiniteShuffling = NO;
     carouselView.autoScrollTimeInterval = 3.0;
     carouselView.placeholderImageView.image = [UIImage imageNamed:@"placeholderImage.jpg"];
     [self.view addSubview:carouselView];

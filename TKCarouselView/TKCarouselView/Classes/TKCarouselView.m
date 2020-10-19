@@ -43,7 +43,7 @@ static const int imageViewCount = 3;
     self = [super initWithFrame:frame];
     if (self) {
         self.userInteractionEnabled = NO;
-        self.dotSpacing = 7.0;
+        self.dotSpacing = 5.0;
         self.currentPageIndicatorTintColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:1.0];
         self.pageIndicatorTintColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:0.3];
         self.currentDotSize = CGSizeMake(7.0, 7.0);
@@ -60,32 +60,41 @@ static const int imageViewCount = 3;
 - (void)layoutSubviews
 {
     [super layoutSubviews];
+    
+    @try {
+        CGFloat marginX = (_otherDotSize.width + _dotSpacing)*(self.numberOfPages-1)+_currentDotSize.width;
+        if (self.dotAlignmentType == DotAlignmentTypeCenter) {
+            marginX = (self.bounds.size.width - marginX)/2.0;
+        }else if (self.dotAlignmentType == DotAlignmentTypeLeft){
+            marginX = 0;
+        }else if (self.dotAlignmentType == DotAlignmentTypeRight) {
+            marginX = self.bounds.size.width - marginX;
+        }
+        NSArray<UIView*> *subViews = self.subviews;
+        if (@available(iOS 14.0, *)) {
+            subViews = subViews.firstObject.subviews.firstObject.subviews;
+        }
+        for (NSUInteger subviewIndex = 0; subviewIndex < subViews.count; subviewIndex++) {
+            UIView *subview = [subViews objectAtIndex:subviewIndex];
+            if (![subview isKindOfClass:[UIImageView class]]) {
+                continue;
+            }
+            if (subviewIndex == self.currentPage) {
+                [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _currentDotSize.width, _currentDotSize.height)];
+                subview.layer.cornerRadius  = _currentDotRadius;
+                marginX = marginX + _currentDotSize.width + _dotSpacing;
+            } else {
+                [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _otherDotSize.width, _otherDotSize.height)];
+                subview.layer.cornerRadius  = _otherDotRadius;
+                marginX = marginX + _otherDotSize.width + _dotSpacing;
+            }
+        }
+    } @catch (NSException *exception) {
+        
+    } @finally {
+        
+    }
 
-//    CGFloat marginX = (_otherDotSize.width + _dotSpacing)*(self.numberOfPages-1)+_currentDotSize.width;
-//    if (self.dotAlignmentType == DotAlignmentTypeCenter) {
-//        marginX = (self.bounds.size.width - marginX)/2.0;
-//    }else if (self.dotAlignmentType == DotAlignmentTypeLeft){
-//        marginX = 0;
-//    }else if (self.dotAlignmentType == DotAlignmentTypeRight) {
-//        marginX = self.bounds.size.width - marginX;
-//    }
-//    for (NSUInteger subviewIndex = 0; subviewIndex < self.subviews.count; subviewIndex++) {
-//        UIView *subview = [self.subviews objectAtIndex:subviewIndex];
-//        if (![subview isKindOfClass:[UIImageView class]]) {
-//            continue;
-//        }
-//        if (subviewIndex == self.currentPage) {
-//            [subview setFrame:CGRectMake(marginX, (self.bounds.size.height - _currentDotSize.height) / 2.0 , _currentDotSize.width, _currentDotSize.height)];
-//            subview.layer.cornerRadius  = _currentDotRadius;
-//            subview.backgroundColor = self.currentDotColor;
-//            marginX = marginX + _currentDotSize.width + _dotSpacing;
-//        } else {
-//            [subview setFrame:CGRectMake(marginX, (self.bounds.size.height - _otherDotSize.height) / 2.0, _otherDotSize.width, _otherDotSize.height)];
-//            subview.layer.cornerRadius  = _otherDotRadius;
-//            subview.backgroundColor = self.otherDotColor;
-//            marginX = marginX + _otherDotSize.width + _dotSpacing;
-//        }
-//    }
 }
 
 #pragma mark - Setter
@@ -95,7 +104,7 @@ static const int imageViewCount = 3;
 
 - (void)setCurrentPage:(NSInteger)currentPage {
     [super setCurrentPage:currentPage];
-
+    
 }
 
 @end
@@ -130,7 +139,8 @@ static const int imageViewCount = 3;
     _imageCount = 0;
     _currentPageIndex = 0;
     _isNeedReloadFirstDidScrollCallBack = YES;
-
+    _isInfiniteShuffling = YES;
+    
     for (int i = 0;i < imageViewCount; i++) {
         UIImageView *imageView = [[UIImageView alloc] init];
         //imageView.contentMode = UIViewContentModeScaleAspectFit;
@@ -143,27 +153,27 @@ static const int imageViewCount = 3;
     NSAssert(imageCount >= 0 && imageCount <100, @"The number of images is not safe");
     NSParameterAssert(itemAtIndexBlock);
     NSParameterAssert(imageClickedBlock);
-
+    
     self.placeholderImageView.hidden = imageCount == 0 ? NO : YES;
-
+    
     _imageCount = imageCount;
     _imageClickedBlock = imageClickedBlock;
     _itemAtIndexBlock = itemAtIndexBlock;
-
+    
     self.scrollView.hidden = imageCount >0 ? NO : YES;
     self.scrollView.scrollEnabled = imageCount > 1 ? YES : NO ;
-
+    
     self.pageControl.hidden = imageCount>1 ? NO : YES;
     self.pageControl.numberOfPages = imageCount;
     self.pageControl.currentPage = _firstStartIndex;
-
+    
     [self setContent];
     [self startTimer];
     if (self.itemDidScrollOperationBlock && self.isNeedReloadFirstDidScrollCallBack) self.itemDidScrollOperationBlock(self.pageControl.currentPage);
     if (_delegate && [_delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)] && self.isNeedReloadFirstDidScrollCallBack) {
         [_delegate cycleScrollView:self didScrollToIndex:self.pageControl.currentPage];
     }
-
+    
 }
 
 - (void)makeScrollViewScrollToIndex:(NSInteger)index {
@@ -186,17 +196,17 @@ static const int imageViewCount = 3;
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-
+    
     _scrollView.frame = self.bounds;
     CGFloat width = self.bounds.size.width;
     CGFloat height = self.bounds.size.height;
     _scrollView.contentSize = CGSizeMake(width*imageViewCount, 0);
-
+    
     for (int i=0; i<_scrollView.subviews.count; i++) {
         UIImageView *imageView = self.scrollView.subviews[i];
         imageView.frame = CGRectMake(i*width, 0, width, height);
     }
-
+    
     //Show the middle image
     self.scrollView.contentOffset = CGPointMake(width, 0);
     
@@ -215,8 +225,14 @@ static const int imageViewCount = 3;
             index++;
         }
         if (index<0) {
+            if (!_isInfiniteShuffling) {
+                continue;
+            }
             index = _pageControl.numberOfPages == 0 ? 0 : _pageControl.numberOfPages-1;
         }else if (index == _pageControl.numberOfPages) {
+            if (!_isInfiniteShuffling) {
+                continue;
+            }
             index = 0;
         }
         imageView.tag = index;
@@ -226,6 +242,9 @@ static const int imageViewCount = 3;
 }
 
 - (void)updateDisplayContent {
+    if (_isInfiniteShuffling==NO &&( self.currentPageIndex == 0 || self.currentPageIndex == _imageCount - 1)) {
+        return;
+    }
     CGFloat width = self.bounds.size.width;
     [self setContent];
     self.scrollView.contentOffset = CGPointMake(width, 0);
@@ -237,7 +256,7 @@ static const int imageViewCount = 3;
     NSInteger page = 0;
     //To get the minimum offset
     CGFloat minDistance = MAXFLOAT;
-
+    
     for (int i=0; i<self.scrollView.subviews.count; i++) {
         UIImageView *imageView = self.scrollView.subviews[i];
         CGFloat distance = 0;
@@ -279,13 +298,13 @@ static const int imageViewCount = 3;
 
 - (void)startTimer {
     [self stopTimer];
-    if (_autoScroll && _imageCount>1) {
+    if (_autoScroll && _imageCount>1 && _isInfiniteShuffling) {
         __weak TKCarouselView *weakSelf = self;
         NSTimer *timer = [NSTimer tk_ScheduledTimerWithTimeInterval:_autoScrollTimeInterval repeats:YES block:^(NSTimer *timer) {
             CGFloat width = weakSelf.bounds.size.width;
             [weakSelf.scrollView setContentOffset:CGPointMake(2 * width, 0) animated:YES];
         }];
-
+        
         [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
         self.timer = timer;
     }
