@@ -14,18 +14,43 @@ typedef NS_ENUM(NSInteger, DotAlignmentType) {
     DotAlignmentTypeRight = 2,
 };
 
-typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
+typedef void(^TKItemAtIndexBlock)(UIImageView * _Nullable imageView,NSInteger index);
 
-@interface TKPageControl : UIPageControl
 
-@property (nonatomic,strong) UIColor *currentDotColor;
-@property (nonatomic,strong) UIColor *otherDotColor;
-@property (nonatomic,assign) CGSize currentDotSize;//Current page dot size
-@property (nonatomic,assign) CGSize otherDotSize;//Except for the size of the dots on the current page
-@property (nonatomic,assign) CGFloat currentDotRadius;//The default is 0
-@property (nonatomic,assign) CGFloat otherDotRadius;//The default is 0
-@property (nonatomic,assign) CGFloat dotSpacing;//Spacing
-@property (nonatomic,assign) DotAlignmentType dotAlignmentType;
+@protocol TKPageControlDelegate <NSObject>
+
+- (void)pageControlTapIndex:(NSInteger)index;
+
+@end
+
+@interface TKPageControl : UIView
+
+@property (nonatomic, weak) id<TKPageControlDelegate> _Nullable delegate;
+
+/// default is 0
+@property (nonatomic, assign) NSInteger numberOfPages;
+
+/// default is 0. Value is pinned to 0..numberOfPages-1
+@property (nonatomic, assign) NSInteger currentPage;
+
+/// The tint color for non-selected indicators. Default is nil.
+@property (nullable, nonatomic, strong) UIColor *pageIndicatorTintColor ;
+
+/// The tint color for the currently-selected indicators. Default is nil.
+@property (nullable, nonatomic, strong) UIColor *currentPageIndicatorTintColor;
+
+//Current page dot size
+@property (nonatomic,assign) CGSize currentDotSize;
+//Except for the size of the dots on the current page
+@property (nonatomic,assign) CGSize otherDotSize;
+//The default is 0
+@property (nonatomic,assign) CGFloat currentDotRadius;
+//The default is 0
+@property (nonatomic,assign) CGFloat otherDotRadius;
+//Spacing
+@property (nonatomic,assign) CGFloat dotSpacing;
+@property (nonatomic,assign) DotAlignmentType dotAlignmentType;;
+
 
 @end
 
@@ -33,21 +58,18 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 @protocol TKCarouselViewDelegate <NSObject>
 
 /** 点击图片回调 */
-- (void)cycleScrollView:(TKCarouselView *)cycleScrollView didSelectItemAtIndex:(NSInteger)index;
+- (void)cycleScrollView:(TKCarouselView *_Nullable)cycleScrollView didSelectItemAtIndex:(NSInteger)index;
 
 /** 图片滚动回调 */
-- (void)cycleScrollView:(TKCarouselView *)cycleScrollView didScrollToIndex:(NSInteger)index;
+- (void)cycleScrollView:(TKCarouselView *_Nullable)cycleScrollView didScrollToIndex:(NSInteger)index;
 
 @end
 
 @interface TKCarouselView : UIView
 
-@property (nonatomic, weak) id<TKCarouselViewDelegate> delegate;
+@property (nonatomic, weak) id<TKCarouselViewDelegate> _Nullable delegate;
 
 //MARK:- CarouselView parameter setting
-
-/// Infinite shuffling (default is YES , the timer is off)
-@property (nonatomic,assign) BOOL isInfiniteShuffling;
 
 // Whether to turn on automatic rotoasting (the default is to turn on, it must be imageCount>1, otherwise rotoasting is meaningless)
 @property (nonatomic,assign) BOOL autoScroll;
@@ -56,10 +78,10 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 @property (nonatomic,assign) NSTimeInterval autoScrollTimeInterval;
 
 // It takes effect when imageCount==0
-@property (nonatomic,strong) UIImageView *placeholderImageView;
+@property (nonatomic,strong) UIImageView * _Nullable placeholderImageView;
 
 //MARK:- UIPageControl Related Settings (do not set the default to dots)
-@property (nonatomic,strong) TKPageControl *pageControl;
+@property (nonatomic,strong) TKPageControl * _Nullable pageControl;
 
 // Whether pagecontrol is hidden or not
 @property (nonatomic,assign) BOOL isHiddenPageControl;
@@ -67,13 +89,13 @@ typedef void(^TKItemAtIndexBlock)(UIImageView *imageView,NSInteger index);
 @property (nonatomic,assign) BOOL isNeedReloadFirstDidScrollCallBack;
 
 // scroll current index
-@property (nonatomic, copy) void (^itemDidScrollOperationBlock)(NSInteger currentIndex);
+@property (nonatomic, copy) void (^ _Nullable itemDidScrollOperationBlock)(NSInteger currentIndex);
 
 /// reload (Must be implemented)
 /// @param imageCount imageCount (0-100)
 /// @param itemAtIndexBlock A view displayed on the screen
 /// @param imageClickedBlock The view is clicked
-- (void)reloadImageCount:(NSUInteger)imageCount itemAtIndexBlock:(TKItemAtIndexBlock)itemAtIndexBlock imageClickedBlock:(void(^)(NSInteger index))imageClickedBlock;
+- (void)reloadImageCount:(NSUInteger)imageCount itemAtIndexBlock:(TKItemAtIndexBlock _Nullable )itemAtIndexBlock imageClickedBlock:(void(^_Nullable)(NSInteger index))imageClickedBlock;
 
 - (void)pageControlHidden:(BOOL)isHidden;
 - (void)makeScrollViewScrollToIndex:(NSInteger)index;

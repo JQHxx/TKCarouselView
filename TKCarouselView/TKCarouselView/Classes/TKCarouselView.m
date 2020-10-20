@@ -42,8 +42,7 @@ static const int imageViewCount = 3;
 {
     self = [super initWithFrame:frame];
     if (self) {
-        self.userInteractionEnabled = NO;
-        self.dotSpacing = 5.0;
+        self.dotSpacing = 7.0;
         self.currentPageIndicatorTintColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:1.0];
         self.pageIndicatorTintColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:0.3];
         self.currentDotSize = CGSizeMake(7.0, 7.0);
@@ -51,73 +50,79 @@ static const int imageViewCount = 3;
         self.otherDotSize = CGSizeMake(7.0, 7.0);
         self.otherDotRadius = 3.5;
         self.dotAlignmentType = DotAlignmentTypeCenter;
-        self.currentDotColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:1.0];
-        self.otherDotColor = [UIColor colorWithRed:255/255.0 green:255/255.0 blue:255/255.0 alpha:0.3];
     }
     return self;
+}
+
+- (void)setNumberOfPages:(NSInteger)numberOfPages {
+    _numberOfPages = numberOfPages;
+    [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    for (int i=0; i<numberOfPages; i++) {
+        UIImageView *dotImageView = [[UIImageView alloc] initWithFrame:CGRectMake(_otherDotSize.width*i, (self.bounds.size.height-self.otherDotSize.height)/2, _otherDotSize.width, _otherDotSize.height)];
+        dotImageView.tag = i;
+        dotImageView.userInteractionEnabled = YES;
+        dotImageView.backgroundColor = self.pageIndicatorTintColor;
+        [self addSubview:dotImageView];
+        
+        UITapGestureRecognizer *tapGes = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(pointTapAction:)];
+        tapGes.cancelsTouchesInView = NO;
+        [dotImageView addGestureRecognizer:tapGes];
+    }
+}
+
+- (void)setCurrentPage:(NSInteger)currentPage {
+    _currentPage = currentPage;
+    [self layoutSubviews];
 }
 
 - (void)layoutSubviews
 {
     [super layoutSubviews];
-    
-    @try {
-        CGFloat marginX = (_otherDotSize.width + _dotSpacing)*(self.numberOfPages-1)+_currentDotSize.width;
-        if (self.dotAlignmentType == DotAlignmentTypeCenter) {
-            marginX = (self.bounds.size.width - marginX)/2.0;
-        }else if (self.dotAlignmentType == DotAlignmentTypeLeft){
-            marginX = 0;
-        }else if (self.dotAlignmentType == DotAlignmentTypeRight) {
-            marginX = self.bounds.size.width - marginX;
-        }
-        NSArray<UIView*> *subViews = self.subviews;
-        if (@available(iOS 14.0, *)) {
-            subViews = subViews.firstObject.subviews.firstObject.subviews;
-        }
-        for (NSUInteger subviewIndex = 0; subviewIndex < subViews.count; subviewIndex++) {
-            UIView *subview = [subViews objectAtIndex:subviewIndex];
-            if (![subview isKindOfClass:[UIImageView class]]) {
-                continue;
-            }
-            if (subviewIndex == self.currentPage) {
-                [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _currentDotSize.width, _currentDotSize.height)];
-                subview.layer.cornerRadius  = _currentDotRadius;
-                marginX = marginX + _currentDotSize.width + _dotSpacing;
-            } else {
-                [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _otherDotSize.width, _otherDotSize.height)];
-                subview.layer.cornerRadius  = _otherDotRadius;
-                marginX = marginX + _otherDotSize.width + _dotSpacing;
-            }
-        }
-    } @catch (NSException *exception) {
-        
-    } @finally {
-        
+
+    CGFloat marginX = (_otherDotSize.width + _dotSpacing)*(self.numberOfPages-1)+_currentDotSize.width;
+    if (self.dotAlignmentType == DotAlignmentTypeCenter) {
+        marginX = (self.bounds.size.width - marginX)/2;
+    }else if (self.dotAlignmentType == DotAlignmentTypeLeft){
+        marginX = 0;
+    }else if (self.dotAlignmentType == DotAlignmentTypeRight) {
+        marginX = self.bounds.size.width - marginX;
     }
-
+    for (NSUInteger subviewIndex = 0; subviewIndex < self.subviews.count; subviewIndex++) {
+        UIView *subview = [self.subviews objectAtIndex:subviewIndex];
+        if (subviewIndex == self.currentPage) {
+            [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _currentDotSize.width, _currentDotSize.height)];
+            subview.layer.cornerRadius  = _currentDotRadius;
+            subview.backgroundColor = self.currentPageIndicatorTintColor;
+            marginX = _currentDotSize.width + _dotSpacing + marginX;
+        }else{
+            [subview setFrame:CGRectMake(marginX, subview.frame.origin.y, _otherDotSize.width, _otherDotSize.height)];
+            subview.layer.cornerRadius  = _otherDotRadius;
+            subview.backgroundColor = self.pageIndicatorTintColor;
+            marginX = _otherDotSize.width + _dotSpacing +marginX;
+        }
+    }
 }
 
-#pragma mark - Setter
-- (void)setNumberOfPages:(NSInteger)numberOfPages {
-    [super setNumberOfPages:numberOfPages];
-}
-
-- (void)setCurrentPage:(NSInteger)currentPage {
-    [super setCurrentPage:currentPage];
-    
+#pragma mark - Event response
+- (void)pointTapAction:(UIGestureRecognizer *)ges {
+    UIView *view = ges.view;
+    NSInteger tag = view.tag;
+    if (_delegate && [_delegate respondsToSelector:@selector(pageControlTapIndex:)]) {
+        [_delegate pageControlTapIndex:tag];
+    }
 }
 
 @end
 
-@interface TKCarouselView() <UIScrollViewDelegate>
+@interface TKCarouselView() <UIScrollViewDelegate, TKPageControlDelegate>
 {
-    NSInteger _firstStartIndex;
+    NSInteger _startIndex;
 }
 @property (nonatomic, strong) UIScrollView*scrollView;
 @property (nonatomic, assign) NSUInteger imageCount;
-@property (nonatomic, weak  ) NSTimer *timer;
-@property (nonatomic, copy  ) TKItemAtIndexBlock itemAtIndexBlock;
-@property (nonatomic, copy  ) void(^imageClickedBlock) (NSInteger index);
+@property (nonatomic, weak) NSTimer *timer;
+@property (nonatomic, copy) TKItemAtIndexBlock itemAtIndexBlock;
+@property (nonatomic, copy) void(^imageClickedBlock) (NSInteger index);
 @property (nonatomic, assign) NSInteger currentPageIndex;//The subscript of the current screen
 
 @end
@@ -139,7 +144,6 @@ static const int imageViewCount = 3;
     _imageCount = 0;
     _currentPageIndex = 0;
     _isNeedReloadFirstDidScrollCallBack = YES;
-    _isInfiniteShuffling = YES;
     
     for (int i = 0;i < imageViewCount; i++) {
         UIImageView *imageView = [[UIImageView alloc] init];
@@ -150,7 +154,7 @@ static const int imageViewCount = 3;
 }
 
 - (void)reloadImageCount:(NSUInteger)imageCount itemAtIndexBlock:(TKItemAtIndexBlock)itemAtIndexBlock imageClickedBlock:(void(^)(NSInteger index))imageClickedBlock {
-    NSAssert(imageCount >= 0 && imageCount <100, @"The number of images is not safe");
+    NSAssert(imageCount >= 0 && imageCount < 100, @"The number of images is not safe");
     NSParameterAssert(itemAtIndexBlock);
     NSParameterAssert(imageClickedBlock);
     
@@ -160,12 +164,12 @@ static const int imageViewCount = 3;
     _imageClickedBlock = imageClickedBlock;
     _itemAtIndexBlock = itemAtIndexBlock;
     
-    self.scrollView.hidden = imageCount >0 ? NO : YES;
+    self.scrollView.hidden = imageCount > 0 ? NO : YES;
     self.scrollView.scrollEnabled = imageCount > 1 ? YES : NO ;
     
-    self.pageControl.hidden = imageCount>1 ? NO : YES;
+    self.pageControl.hidden = imageCount > 1 ? NO : YES;
     self.pageControl.numberOfPages = imageCount;
-    self.pageControl.currentPage = _firstStartIndex;
+    self.pageControl.currentPage = _startIndex;
     
     [self setContent];
     [self startTimer];
@@ -180,7 +184,7 @@ static const int imageViewCount = 3;
     if (index >= _pageControl.numberOfPages) {
         return;
     }
-    _firstStartIndex = index;
+    _startIndex = index;
     _pageControl.currentPage = index;
     [self setContent];
     [self startTimer];
@@ -216,6 +220,7 @@ static const int imageViewCount = 3;
 
 //Set display content
 - (void)setContent {
+    
     for (int i=0; i<self.scrollView.subviews.count; i++) {
         NSInteger index = _pageControl.currentPage;
         UIImageView *imageView = self.scrollView.subviews[i];
@@ -224,15 +229,9 @@ static const int imageViewCount = 3;
         }else if (i == 2){
             index++;
         }
-        if (index<0) {
-            if (!_isInfiniteShuffling) {
-                continue;
-            }
+        if (index < 0) {
             index = _pageControl.numberOfPages == 0 ? 0 : _pageControl.numberOfPages-1;
-        }else if (index == _pageControl.numberOfPages) {
-            if (!_isInfiniteShuffling) {
-                continue;
-            }
+        } else if (index == _pageControl.numberOfPages) {
             index = 0;
         }
         imageView.tag = index;
@@ -242,17 +241,15 @@ static const int imageViewCount = 3;
 }
 
 - (void)updateDisplayContent {
-    if (_isInfiniteShuffling==NO &&( self.currentPageIndex == 0 || self.currentPageIndex == _imageCount - 1)) {
-        return;
-    }
-    CGFloat width = self.bounds.size.width;
     [self setContent];
+    CGFloat width = self.bounds.size.width;
     self.scrollView.contentOffset = CGPointMake(width, 0);
 }
 
 //MARK:- UIScrollViewDelegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    
     NSInteger page = 0;
     //To get the minimum offset
     CGFloat minDistance = MAXFLOAT;
@@ -294,11 +291,16 @@ static const int imageViewCount = 3;
     }
 }
 
+#pragma mark - TKPageControlDelegate
+- (void)pageControlTapIndex:(NSInteger)index {
+    [self makeScrollViewScrollToIndex:index];
+}
+
 //MARK:- The timer
 
 - (void)startTimer {
     [self stopTimer];
-    if (_autoScroll && _imageCount>1 && _isInfiniteShuffling) {
+    if (_autoScroll && _imageCount>1) {
         __weak TKCarouselView *weakSelf = self;
         NSTimer *timer = [NSTimer tk_ScheduledTimerWithTimeInterval:_autoScrollTimeInterval repeats:YES block:^(NSTimer *timer) {
             CGFloat width = weakSelf.bounds.size.width;
@@ -354,6 +356,7 @@ static const int imageViewCount = 3;
 - (TKPageControl *)pageControl {
     if (!_pageControl) {
         _pageControl = [[TKPageControl alloc] initWithFrame:CGRectMake(0, self.bounds.size.height - 20, self.bounds.size.width, 20)];
+        _pageControl.delegate = self;
         [self addSubview:_pageControl];
     }
     return _pageControl;

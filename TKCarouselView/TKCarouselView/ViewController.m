@@ -114,10 +114,16 @@ int i = 0;
    TKCarouselView * carouselView = [[TKCarouselView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.width/2)];
     __weak typeof(carouselView) weakCarouselView = carouselView;
     carouselView.autoScroll = NO;
-    carouselView.isInfiniteShuffling = NO;
     carouselView.autoScrollTimeInterval = 3.0;
+    carouselView.pageControl.dotAlignmentType = DotAlignmentTypeCenter;
     carouselView.placeholderImageView.image = [UIImage imageNamed:@"placeholderImage.jpg"];
     [self.view addSubview:carouselView];
+    
+    carouselView.pageControl.currentDotSize = CGSizeMake(18, 5);
+    carouselView.pageControl.otherDotSize = CGSizeMake(12, 5);
+    carouselView.pageControl.currentDotRadius = 2.0;
+    carouselView.pageControl.otherDotRadius = 2.0;
+    carouselView.pageControl.dotSpacing = 8.0;
 
     carouselView.isNeedReloadFirstDidScrollCallBack = NO;
     carouselView.itemDidScrollOperationBlock = ^(NSInteger currentIndex) {
@@ -149,7 +155,7 @@ int i = 0;
     }];
 
     //[carouselView pageControlHidden:YES];
-    [carouselView makeScrollViewScrollToIndex:3];
+    [carouselView makeScrollViewScrollToIndex:array.count - 1];
 
 
     UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 100, 100, 22)];
