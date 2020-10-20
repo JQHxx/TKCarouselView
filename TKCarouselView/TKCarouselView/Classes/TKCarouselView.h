@@ -83,9 +83,6 @@ typedef void(^TKItemAtIndexBlock)(UIImageView * _Nullable imageView,NSInteger in
 //MARK:- UIPageControl Related Settings (do not set the default to dots)
 @property (nonatomic,strong) TKPageControl * _Nullable pageControl;
 
-// Whether pagecontrol is hidden or not
-@property (nonatomic,assign) BOOL isHiddenPageControl;
-
 @property (nonatomic,assign) BOOL isNeedReloadFirstDidScrollCallBack;
 
 // scroll current index

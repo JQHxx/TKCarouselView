@@ -167,7 +167,9 @@ static const int imageViewCount = 3;
     self.scrollView.hidden = imageCount > 0 ? NO : YES;
     self.scrollView.scrollEnabled = imageCount > 1 ? YES : NO ;
     
-    self.pageControl.hidden = imageCount > 1 ? NO : YES;
+    if (!self.pageControl.hidden) {
+        self.pageControl.hidden = imageCount > 1 ? NO : YES;
+    }
     self.pageControl.numberOfPages = imageCount;
     self.pageControl.currentPage = _startIndex;
     

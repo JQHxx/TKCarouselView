@@ -124,6 +124,7 @@ int i = 0;
     carouselView.pageControl.currentDotRadius = 2.0;
     carouselView.pageControl.otherDotRadius = 2.0;
     carouselView.pageControl.dotSpacing = 8.0;
+    //carouselView.pageControl.hidden = YES;
 
     carouselView.isNeedReloadFirstDidScrollCallBack = NO;
     carouselView.itemDidScrollOperationBlock = ^(NSInteger currentIndex) {
