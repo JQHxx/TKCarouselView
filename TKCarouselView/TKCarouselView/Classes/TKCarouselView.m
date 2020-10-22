@@ -58,7 +58,7 @@ static const int imageViewCount = 3;
     _numberOfPages = numberOfPages;
     [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     for (int i=0; i<numberOfPages; i++) {
-        UIImageView *dotImageView = [[UIImageView alloc] initWithFrame:CGRectMake(_otherDotSize.width*i, (self.bounds.size.height-self.otherDotSize.height)/2, _otherDotSize.width, _otherDotSize.height)];
+        UIImageView *dotImageView = [[UIImageView alloc] initWithFrame:CGRectMake(_otherDotSize.width*i, (self.bounds.size.height-self.otherDotSize.height)/2.0, _otherDotSize.width, _otherDotSize.height)];
         dotImageView.tag = i;
         dotImageView.userInteractionEnabled = YES;
         dotImageView.backgroundColor = self.pageIndicatorTintColor;
@@ -72,7 +72,7 @@ static const int imageViewCount = 3;
 
 - (void)setCurrentPage:(NSInteger)currentPage {
     _currentPage = currentPage;
-    [self layoutSubviews];
+    [self setNeedsLayout];
 }
 
 - (void)layoutSubviews
